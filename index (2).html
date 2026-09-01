@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Fahim — Aspiring Red Team Operator</title>
+<meta name="description" content="MD Fahim, CSE student at Southeast University, building toward a career in red team operations and offensive security.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05080a;
+    --bg-2:#080d11;
+    --white:#eef3f5;
+    --white-dim:#a9b7bd;
+    --green:#3ee08c;
+    --green-dim:#2a9d64;
+    --blue:#4cb2ff;
+    --blue-dim:#2f7fc9;
+    --red:#ff4d5e;
+    --red-dim:#c2313f;
+    --glass-bg:rgba(255,255,255,0.035);
+    --glass-bg-strong:rgba(255,255,255,0.06);
+    --glass-border:rgba(255,255,255,0.09);
+    --radius:16px;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--bg);
+    color:var(--white);
+    font-family:var(--sans);
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ---------- animated background ---------- */
+  .bg-layer{
+    position:fixed; inset:0; z-index:-3; overflow:hidden; pointer-events:none;
+  }
+  .bg-grid{
+    position:absolute; inset:-2px;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size:46px 46px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, black 40%, transparent 90%);
+  }
+  .orb{
+    position:absolute; border-radius:50%; filter:blur(90px); opacity:.35;
+    will-change:transform;
+  }
+  .orb-green{width:520px;height:520px; background:var(--green); top:-140px; left:-120px; animation:float1 26s ease-in-out infinite;}
+  .orb-blue{width:600px;height:600px; background:var(--blue); bottom:-220px; right:-160px; animation:float2 32s ease-in-out infinite;}
+  .orb-red{width:380px;height:380px; background:var(--red); top:40%; left:55%; opacity:.16; animation:float3 22s ease-in-out infinite;}
+
+  @keyframes float1{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(60px,90px) scale(1.15);}
+  }
+  @keyframes float2{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(-70px,-50px) scale(1.1);}
+  }
+  @keyframes float3{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(-40px,60px) scale(1.25);}
+  }
+
+  .scanline{
+    position:fixed; left:0; right:0; height:2px; z-index:-2;
+    background:linear-gradient(90deg, transparent, rgba(62,224,140,.5), rgba(76,178,255,.4), transparent);
+    animation:scan 9s linear infinite;
+    opacity:.5;
+  }
+  @keyframes scan{
+    0%{top:-2%;}
+    100%{top:102%;}
+  }
+
+  .cursor-glow{
+    position:fixed; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(76,178,255,.08), rgba(62,224,140,.04) 40%, transparent 70%);
+    pointer-events:none; z-index:-1; transform:translate(-50%,-50%);
+    transition:opacity .3s ease; will-change:transform;
+  }
+
+  ::selection{ background:rgba(62,224,140,.3); color:#fff; }
+
+  /* ---------- glass utility ---------- */
+  .glass{
+    background:var(--glass-bg);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    border-radius:var(--radius);
+    box-shadow:0 8px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed; top:18px; left:0; right:0; z-index:100;
+  }
+  .nav-inner{
+    max-width:1180px; margin:0 auto; padding:0 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .nav-glass{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    padding:12px 22px; border-radius:100px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--white); }
+  .brand-mark{ width:38px; height:38px; flex-shrink:0; }
+  .brand-text{ font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:.02em; }
+  .brand-text span{ color:var(--green); }
+
+  .nav-links{ display:flex; gap:6px; list-style:none; align-items:center; }
+  .nav-links a{
+    color:var(--white-dim); text-decoration:none; font-size:14px; font-weight:500;
+    padding:8px 14px; border-radius:100px; position:relative; transition:color .25s ease, background .25s ease;
+  }
+  .nav-links a:hover{ color:var(--white); background:rgba(255,255,255,.05); }
+
+  .nav-toggle{ display:none; background:none; border:none; color:var(--white); cursor:pointer; padding:6px; }
+  .nav-toggle svg{ width:24px; height:24px; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+    padding:150px 0 90px;
+    position:relative;
+  }
+  .hero-grid{
+    display:grid; grid-template-columns:1.15fr .85fr; gap:56px; align-items:center;
+  }
+  .eyebrow-tag{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:12.5px; color:var(--green);
+    padding:6px 14px; border-radius:100px; margin-bottom:22px;
+  }
+  .eyebrow-tag .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green); animation:pulse-dot 1.8s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  .hero-name{
+    font-family:var(--mono); font-weight:800; line-height:1.02;
+    font-size:clamp(42px, 6vw, 76px); letter-spacing:-.01em;
+    display:flex; flex-wrap:wrap;
+  }
+  .hero-name .char{
+    display:inline-block; opacity:0; transform:translateY(28px);
+    animation:riseIn .7s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .hero-name .accent{ background:linear-gradient(120deg, var(--green), var(--blue) 60%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  @keyframes riseIn{ to{ opacity:1; transform:translateY(0);} }
+
+  .hero-role{
+    margin-top:20px; font-size:clamp(16px,2.1vw,20px); color:var(--white-dim);
+    max-width:560px; line-height:1.6;
+  }
+  .hero-role strong{ color:var(--white); font-weight:600; }
+
+  .hero-cta{ display:flex; gap:14px; margin-top:34px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--sans); font-weight:600; font-size:14.5px; text-decoration:none;
+    padding:13px 26px; border-radius:100px; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+    cursor:pointer; border:none;
+  }
+  .btn-primary{
+    background:linear-gradient(120deg, var(--green), var(--blue));
+    color:#03110a;
+  }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 30px rgba(62,224,140,.25); }
+  .btn-ghost{
+    color:var(--white); border:1px solid var(--glass-border); background:var(--glass-bg);
+  }
+  .btn-ghost:hover{ border-color:rgba(255,255,255,.25); transform:translateY(-2px); }
+
+  /* terminal card */
+  .terminal{
+    padding:0; overflow:hidden;
+  }
+  .terminal-bar{
+    display:flex; align-items:center; gap:8px; padding:14px 18px;
+    border-bottom:1px solid var(--glass-border);
+  }
+  .terminal-dot{ width:11px; height:11px; border-radius:50%; }
+  .terminal-dot.red{ background:var(--red); }
+  .terminal-dot.green{ background:var(--green); }
+  .terminal-dot.blue{ background:var(--blue); }
+  .terminal-title{ margin-left:8px; font-family:var(--mono); font-size:12px; color:var(--white-dim); }
+  .terminal-body{ padding:24px; font-family:var(--mono); font-size:14px; line-height:1.9; min-height:220px; }
+  .terminal-line{ color:var(--white-dim); }
+  .terminal-prompt{ color:var(--green); }
+  .terminal-path{ color:var(--blue); }
+  .type-target{ color:var(--white); }
+  .cursor-blink{
+    display:inline-block; width:8px; height:16px; background:var(--green);
+    margin-left:2px; vertical-align:middle; animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---------- section shell ---------- */
+  section{ position:relative; padding:110px 0; }
+  .section-head{ margin-bottom:52px; max-width:640px; }
+  .section-index{
+    font-family:var(--mono); font-size:13px; color:var(--blue); margin-bottom:14px; display:block;
+  }
+  .section-title{
+    font-family:var(--mono); font-weight:700; font-size:clamp(26px,3.6vw,38px); letter-spacing:-.01em; line-height:1.15;
+  }
+  .section-sub{ margin-top:14px; color:var(--white-dim); font-size:16px; line-height:1.7; }
+
+  .divider{
+    height:1px; width:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent);
+  }
+
+  /* ---------- about ---------- */
+  .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; }
+  .about-text p{ color:var(--white-dim); font-size:16px; line-height:1.85; margin-bottom:18px; }
+  .about-text strong{ color:var(--white); font-weight:600; }
+  .stat-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; }
+  .stat-card{ padding:22px; }
+  .stat-num{ font-family:var(--mono); font-weight:700; font-size:26px; color:var(--green); }
+  .stat-label{ margin-top:6px; font-size:13px; color:var(--white-dim); }
+
+  /* ---------- focus cards ---------- */
+  .focus-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .focus-card{
+    padding:28px; position:relative; overflow:hidden;
+    transition:transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+  }
+  .focus-card::before{
+    content:''; position:absolute; inset:0; opacity:0; transition:opacity .4s ease;
+    background:radial-gradient(circle at 30% 20%, var(--glow-color, var(--green)) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .focus-card:hover{ transform:translateY(-6px); border-color:rgba(255,255,255,.18); }
+  .focus-card:hover::before{ opacity:.14; }
+  .focus-icon{
+    width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:20px; border:1px solid var(--glass-border);
+  }
+  .focus-icon svg{ width:22px; height:22px; }
+  .focus-card h3{ font-family:var(--mono); font-size:17px; font-weight:600; margin-bottom:10px; }
+  .focus-card p{ color:var(--white-dim); font-size:14.5px; line-height:1.7; }
+
+  /* ---------- roadmap ---------- */
+  .roadmap{ position:relative; padding-left:8px; }
+  .road-item{
+    display:grid; grid-template-columns:64px 1fr; gap:24px; padding-bottom:44px; position:relative;
+  }
+  .road-item:last-child{ padding-bottom:0; }
+  .road-line{
+    position:absolute; left:31px; top:56px; bottom:-4px; width:1px;
+    background:linear-gradient(180deg, rgba(62,224,140,.5), rgba(76,178,255,.15));
+  }
+  .road-item:last-child .road-line{ display:none; }
+  .road-num{
+    width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:18px; color:var(--green); flex-shrink:0;
+  }
+  .road-content h3{ font-family:var(--mono); font-size:17px; font-weight:600; margin-bottom:8px; }
+  .road-content .road-tag{ font-size:12px; color:var(--blue); font-family:var(--mono); margin-bottom:10px; display:block; }
+  .road-content p{ color:var(--white-dim); font-size:14.5px; line-height:1.7; max-width:560px; }
+  .road-item.current .road-num{ background:linear-gradient(120deg, var(--green), var(--blue)); color:#03110a; box-shadow:0 0 24px rgba(62,224,140,.35); }
+
+  /* ---------- education ---------- */
+  .edu-card{ padding:36px; display:grid; grid-template-columns:auto 1fr; gap:26px; align-items:center; }
+  .edu-badge{
+    width:76px; height:76px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, rgba(62,224,140,.15), rgba(76,178,255,.1));
+    border:1px solid var(--glass-border); flex-shrink:0;
+  }
+  .edu-badge svg{ width:36px; height:36px; }
+  .edu-title{ font-family:var(--mono); font-weight:700; font-size:19px; }
+  .edu-meta{ margin-top:8px; color:var(--white-dim); font-size:14.5px; line-height:1.7; }
+  .edu-meta b{ color:var(--white); font-weight:600;}
+  .edu-pill{
+    display:inline-block; margin-top:14px; font-family:var(--mono); font-size:12px; color:var(--green);
+    border:1px solid rgba(62,224,140,.3); padding:5px 12px; border-radius:100px; background:rgba(62,224,140,.06);
+  }
+
+  /* ---------- tools ---------- */
+  .tools-wrap{ display:flex; flex-wrap:wrap; gap:12px; }
+  .tool-pill{
+    font-family:var(--mono); font-size:13.5px; padding:10px 18px; border-radius:100px;
+    display:flex; align-items:center; gap:9px; transition:transform .25s ease, border-color .25s ease;
+  }
+  .tool-pill:hover{ transform:translateY(-3px); border-color:rgba(255,255,255,.22); }
+  .tool-pill .dot{ width:7px; height:7px; border-radius:50%; }
+
+  /* ---------- contact ---------- */
+  .contact-card{ padding:48px; text-align:center; position:relative; overflow:hidden; }
+  .contact-card::after{
+    content:''; position:absolute; inset:0; z-index:-1; opacity:.5;
+    background:radial-gradient(ellipse 60% 80% at 50% 0%, rgba(76,178,255,.12), transparent 70%);
+  }
+  .contact-title{ font-family:var(--mono); font-weight:700; font-size:clamp(24px,3.4vw,34px); margin-bottom:16px; }
+  .contact-sub{ color:var(--white-dim); font-size:15.5px; max-width:480px; margin:0 auto 32px; line-height:1.7; }
+  .contact-links{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .contact-link{
+    display:flex; align-items:center; gap:10px; padding:12px 22px; border-radius:100px;
+    text-decoration:none; color:var(--white); font-size:14px; font-weight:500; transition:transform .25s ease, border-color .25s ease;
+  }
+  .contact-link:hover{ transform:translateY(-3px); border-color:rgba(255,255,255,.22); }
+  .contact-link svg{ width:17px; height:17px; }
+
+  footer{ padding:40px 0; text-align:center; }
+  footer p{ font-family:var(--mono); font-size:12.5px; color:var(--white-dim); }
+  footer .foot-accent{ color:var(--green); }
+
+  .reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important; scroll-behavior:auto !important; }
+  }
+
+  @media (max-width:920px){
+    .hero-grid{ grid-template-columns:1fr; }
+    .about-grid{ grid-template-columns:1fr; }
+    .focus-grid{ grid-template-columns:1fr 1fr; }
+    .nav-links{
+      position:fixed; top:78px; right:28px; left:28px; flex-direction:column; align-items:stretch;
+      background:rgba(8,13,17,.92); backdrop-filter:blur(20px); border:1px solid var(--glass-border);
+      border-radius:18px; padding:14px; gap:4px; display:none;
+    }
+    .nav-links.open{ display:flex; }
+    .nav-links a{ padding:12px 14px; }
+    .nav-toggle{ display:flex; }
+  }
+  @media (max-width:620px){
+    .focus-grid{ grid-template-columns:1fr; }
+    .edu-card{ grid-template-columns:1fr; text-align:center; justify-items:center; }
+    .road-item{ grid-template-columns:52px 1fr; gap:16px; }
+    .road-num{ width:52px; height:52px; font-size:15px; }
+    .road-line{ left:25px; }
+    .stat-row{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-layer">
+    <div class="bg-grid"></div>
+    <div class="orb orb-green"></div>
+    <div class="orb orb-blue"></div>
+    <div class="orb orb-red"></div>
+  </div>
+  <div class="scanline"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-glass glass" style="width:100%;">
+        <a href="#top" class="brand">
+          <svg class="brand-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3ee08c"/>
+                <stop offset="55%" stop-color="#4cb2ff"/>
+                <stop offset="100%" stop-color="#ff4d5e"/>
+              </linearGradient>
+            </defs>
+            <path id="logoHex" d="M24 3 L42 13.5 V34.5 L24 45 L6 34.5 V13.5 Z" stroke="url(#logoGrad)" stroke-width="2" fill="rgba(255,255,255,0.02)"/>
+            <path id="logoM" d="M15 31 V18 L24 27 L33 18 V31" stroke="#eef3f5" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand-text">MD FAHIM<span>.</span></span>
+        </a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#about">About</a></li>
+          <li><a href="#focus">Focus</a></li>
+          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#education">Education</a></li>
+          <li><a href="#tools">Tools</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <!-- ================= HERO ================= -->
+    <header class="hero wrap">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow-tag glass"><span class="dot"></span>Currently: 1st Semester, CSE</span>
+          <h1 class="hero-name" id="heroName"></h1>
+          <p class="hero-role">
+            A <strong>Computer Science &amp; Engineering</strong> student at <strong>Southeast University</strong>,
+            building the foundations of a career in <strong>cybersecurity</strong> — with a long-term focus on
+            <strong>red team operations</strong>.
+          </p>
+          <div class="hero-cta">
+            <a href="#contact" class="btn btn-primary">Get in touch</a>
+            <a href="#roadmap" class="btn btn-ghost">See my roadmap</a>
+          </div>
+        </div>
+
+        <div class="terminal glass">
+          <div class="terminal-bar">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-dot blue"></span>
+            <span class="terminal-title">fahim@seu-cse: ~</span>
+          </div>
+          <div class="terminal-body">
+            <div class="terminal-line"><span class="terminal-prompt">$</span> whoami</div>
+            <div class="terminal-line" style="margin-bottom:14px;">MD Fahim — CSE undergraduate</div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-path">cat</span> goals.txt</div>
+            <div class="terminal-line" style="margin-bottom:14px;">Learning offensive security, one layer at a time.</div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="type-target" id="typeTarget"></span><span class="cursor-blink"></span></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap"><div class="divider"></div></div>
+
+    <!-- ================= ABOUT ================= -->
+    <section id="about">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="section-index">01 — About</span>
+          <h2 class="section-title">Starting at the beginning, on purpose.</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-text reveal">
+            <p>I'm <strong>MD Fahim</strong>, a first-semester student in the <strong>Department of Computer Science and Engineering at Southeast University</strong>. I'm early in my degree, and I'm using that as an advantage — building strong fundamentals in programming, networks, and systems before specializing.</p>
+            <p>My interest is in the <strong>technology and cybersecurity field</strong>, specifically the offensive side of security. I want to grow into a <strong>red team professional</strong> — someone who thinks like an attacker to help organizations find and fix weaknesses before real adversaries do.</p>
+            <p>This site is where I'll track that journey: what I'm learning, what I'm building, and where I'm headed.</p>
+          </div>
+          <div class="reveal">
+            <div class="stat-row">
+              <div class="stat-card glass"><div class="stat-num">1st</div><div class="stat-label">Semester, CSE</div></div>
+              <div class="stat-card glass"><div class="stat-num">SEU</div><div class="stat-label">Southeast University</div></div>
+              <div class="stat-card glass"><div class="stat-num">RT</div><div class="stat-label">Long-term goal: Red Team</div></div>
+              <div class="stat-card glass"><div class="stat-num">DAY 1</div><div class="stat-label">Of a long career ahead</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FOCUS ================= -->
+    <section id="focus">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="section-index">02 — Focus</span>
+          <h2 class="section-title">What I'm building toward</h2>
+          <p class="section-sub">The areas of security I'm most drawn to, and actively studying around.</p>
+        </div>
+        <div class="focus-grid">
+
+          <div class="focus-card glass reveal" style="--glow-color:#ff4d5e;">
+            <div class="focus-icon" style="border-color:rgba(255,77,94,.35); background:rgba(255,77,94,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ff4d5e" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+            </div>
+            <h3>Red Teaming</h3>
+            <p>Simulating real adversaries to test how an organization actually responds under attack — my primary long-term direction.</p>
+          </div>
+
+          <div class="focus-card glass reveal" style="--glow-color:#3ee08c;">
+            <div class="focus-icon" style="border-color:rgba(62,224,140,.35); background:rgba(62,224,140,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3ee08c" stroke-width="1.8"><path d="M12 2v20M2 8l10-6 10 6M4 8v9a2 2 0 002 2h12a2 2 0 002-2V8"/></svg>
+            </div>
+            <h3>Penetration Testing</h3>
+            <p>Learning to identify and responsibly exploit vulnerabilities in systems, applications, and networks.</p>
+          </div>
+
+          <div class="focus-card glass reveal" style="--glow-color:#4cb2ff;">
+            <div class="focus-icon" style="border-color:rgba(76,178,255,.35); background:rgba(76,178,255,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#4cb2ff" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M4 12h3M17 12h3M12 4v3M12 17v3M6.3 6.3l2.1 2.1M15.6 15.6l2.1 2.1M6.3 17.7l2.1-2.1M15.6 8.4l2.1-2.1"/></svg>
+            </div>
+            <h3>Network Security</h3>
+            <p>Understanding how data moves and where it breaks — the foundation every offensive skill is built on.</p>
+          </div>
+
+          <div class="focus-card glass reveal" style="--glow-color:#3ee08c;">
+            <div class="focus-icon" style="border-color:rgba(62,224,140,.35); background:rgba(62,224,140,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3ee08c" stroke-width="1.8"><path d="M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M8 21H5a2 2 0 01-2-2v-3M16 21h3a2 2 0 002-2v-3"/><path d="M9 9l3 3-3 3M14 15h2"/></svg>
+            </div>
+            <h3>Ethical Hacking</h3>
+            <p>Practicing within legal, structured environments — CTFs and labs — to build hands-on, responsible skill.</p>
+          </div>
+
+          <div class="focus-card glass reveal" style="--glow-color:#4cb2ff;">
+            <div class="focus-icon" style="border-color:rgba(76,178,255,.35); background:rgba(76,178,255,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#4cb2ff" stroke-width="1.8"><path d="M4 4h16v12H4z"/><path d="M2 20h20M9 8l-2 2 2 2M15 8l2 2-2 2"/></svg>
+            </div>
+            <h3>Programming Foundations</h3>
+            <p>Python, C, and scripting — the tools that let security concepts turn into working tools and exploits.</p>
+          </div>
+
+          <div class="focus-card glass reveal" style="--glow-color:#ff4d5e;">
+            <div class="focus-icon" style="border-color:rgba(255,77,94,.35); background:rgba(255,77,94,.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ff4d5e" stroke-width="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <h3>Systems &amp; OS Security</h3>
+            <p>Getting comfortable in Linux, understanding permissions, processes, and how systems fail securely — or don't.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap"><div class="divider"></div></div>
+
+    <!-- ================= ROADMAP ================= -->
+    <section id="roadmap">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="section-index">03 — Roadmap</span>
+          <h2 class="section-title">The path from here to red team</h2>
+          <p class="section-sub">A realistic sequence, not a shortcut. Each stage builds on the last.</p>
+        </div>
+
+        <div class="roadmap">
+
+          <div class="road-item current reveal">
+            <div class="road-num glass">1</div>
+            <div class="road-line"></div>
+            <div class="road-content">
+              <span class="road-tag">Now — Semester 1</span>
+              <h3>Foundations</h3>
+              <p>Programming basics, discrete math, and getting fluent in the Linux command line — the groundwork everything else depends on.</p>
+            </div>
+          </div>
+
+          <div class="road-item reveal">
+            <div class="road-num glass">2</div>
+            <div class="road-line"></div>
+            <div class="road-content">
+              <span class="road-tag">Semesters 2–3</span>
+              <h3>Networking &amp; Systems</h3>
+              <p>Deep dive into computer networks, operating systems, and how data actually travels — and where it's exposed.</p>
+            </div>
+          </div>
+
+          <div class="road-item reveal">
+            <div class="road-num glass">3</div>
+            <div class="road-line"></div>
+            <div class="road-content">
+              <span class="road-tag">Semesters 4–5</span>
+              <h3>Security Fundamentals</h3>
+              <p>Cryptography, web security, and structured practice through CTFs and vulnerable-lab environments.</p>
+            </div>
+          </div>
+
+          <div class="road-item reveal">
+            <div class="road-num glass">4</div>
+            <div class="road-line"></div>
+            <div class="road-content">
+              <span class="road-tag">Semesters 6–7</span>
+              <h3>Offensive Security</h3>
+              <p>Penetration testing methodology, tooling, and industry-recognized certifications to validate hands-on skill.</p>
+            </div>
+          </div>
+
+          <div class="road-item reveal">
+            <div class="road-num glass">5</div>
+            <div class="road-content">
+              <span class="road-tag">Beyond graduation</span>
+              <h3>Red Team Operations</h3>
+              <p>Full adversary simulation — working within real engagements to test and strengthen organizational defenses.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap"><div class="divider"></div></div>
+
+    <!-- ================= EDUCATION ================= -->
+    <section id="education">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="section-index">04 — Education</span>
+          <h2 class="section-title">Where it's happening</h2>
+        </div>
+        <div class="edu-card glass reveal">
+          <div class="edu-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3ee08c" stroke-width="1.6"><path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
+          </div>
+          <div>
+            <div class="edu-title">Southeast University</div>
+            <div class="edu-meta">Department of <b>Computer Science and Engineering (CSE)</b> — currently in my <b>1st semester</b>, building the fundamentals that everything else will stand on.</div>
+            <span class="edu-pill">B.Sc. in CSE · In Progress</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TOOLS ================= -->
+    <section id="tools">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="section-index">05 — Tools</span>
+          <h2 class="section-title">What I'm getting hands-on with</h2>
+          <p class="section-sub">Early-stage, but growing every week.</p>
+        </div>
+        <div class="tools-wrap reveal">
+          <span class="tool-pill glass"><span class="dot" style="background:#3ee08c;"></span>Linux</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#4cb2ff;"></span>Python</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#ff4d5e;"></span>Networking Basics</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#3ee08c;"></span>Git &amp; GitHub</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#4cb2ff;"></span>Wireshark</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#ff4d5e;"></span>Kali Linux</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#3ee08c;"></span>C Programming</span>
+          <span class="tool-pill glass"><span class="dot" style="background:#4cb2ff;"></span>CTF Challenges</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap"><div class="divider"></div></div>
+
+    <!-- ================= CONTACT ================= -->
+    <section id="contact">
+      <div class="wrap">
+        <div class="contact-card glass reveal">
+          <h2 class="contact-title">Let's connect</h2>
+          <p class="contact-sub">Open to conversations about cybersecurity, CTFs, study resources, or just connecting with people on a similar path.</p>
+          <div class="contact-links">
+            <a class="contact-link glass" href="mailto:your.email@example.com">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3ee08c" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg>
+              your.email@example.com
+            </a>
+            <a class="contact-link glass" href="https://github.com/your-username" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#4cb2ff" stroke-width="1.8"><path d="M9 19c-4 1-4-2-6-2m12 4v-3.4c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 00-1.3-3.2 4.2 4.2 0 00-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 00-6 0C6.8 3 5.8 3.3 5.8 3.3a4.2 4.2 0 00-.1 3.2A4.6 4.6 0 004.4 9.8c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+              GitHub
+            </a>
+            <a class="contact-link glass" href="https://linkedin.com/in/your-username" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ff4d5e" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 11v5M8 8v.01M12 16v-5M12 11c1-1.2 4-1.2 4 1v4"/></svg>
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Built by MD Fahim <span class="foot-accent">·</span> Southeast University, CSE <span class="foot-accent">·</span> <span id="year"></span></p>
+    </footer>
+  </main>
+
+<script>
+  // ---- Hero name stagger animation ----
+  const heroNameEl = document.getElementById('heroName');
+  const nameText = "MD FAHIM";
+  [...nameText].forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'char' + (ch !== ' ' && i >= 3 ? ' accent' : '');
+    span.style.animationDelay = (i * 0.045) + 's';
+    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    heroNameEl.appendChild(span);
+  });
+
+  // ---- Terminal typing effect ----
+  const phrases = [
+    "learning penetration testing",
+    "practicing on CTF platforms",
+    "studying network security",
+    "preparing for red team ops"
+  ];
+  const typeEl = document.getElementById('typeTarget');
+  let pIndex = 0, cIndex = 0, deleting = false;
+
+  function typeLoop(){
+    const current = phrases[pIndex];
+    if(!deleting){
+      cIndex++;
+      typeEl.textContent = current.slice(0, cIndex);
+      if(cIndex === current.length){
+        deleting = true;
+        setTimeout(typeLoop, 1600);
+        return;
+      }
+    } else {
+      cIndex--;
+      typeEl.textContent = current.slice(0, cIndex);
+      if(cIndex === 0){
+        deleting = false;
+        pIndex = (pIndex + 1) % phrases.length;
+      }
+    }
+    setTimeout(typeLoop, deleting ? 30 : 55);
+  }
+  typeLoop();
+
+  // ---- Cursor glow follow ----
+  const glow = document.getElementById('cursorGlow');
+  let mx = window.innerWidth/2, my = window.innerHeight/2, gx = mx, gy = my;
+  window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateGlow(){
+    gx += (mx - gx) * 0.08;
+    gy += (my - gy) * 0.08;
+    glow.style.transform = `translate(${gx}px, ${gy}px) translate(-50%,-50%)`;
+    requestAnimationFrame(animateGlow);
+  }
+  animateGlow();
+
+  // ---- Scroll reveal ----
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, idx) => {
+      if(entry.isIntersecting){
+        setTimeout(() => entry.target.classList.add('in'), idx * 70);
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  // ---- Mobile nav toggle ----
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  // ---- Footer year ----
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
